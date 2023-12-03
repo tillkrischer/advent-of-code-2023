@@ -4,11 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "day1": "ts-node day1/day1.ts"
+    "day1": "bun day1/day1.ts"
   },
   "author": "",
-  "license": "ISC",
-  "dependencies": {
-    "ts-node": "^10.9.1"
-  }
+  "license": "ISC"
 }
