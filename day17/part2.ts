@@ -68,12 +68,8 @@ const getNeighbours = (grid: number[][], v: Vertex): Vertex[] => {
 
   if (v.x === width - 1 && v.y === height - 1 && v.straight >= MIN_STRAIGHT) {
     neighbours.push({
-      x: -1,
-      y: -1,
-      straight: -1,
-      direction: "up",
       isDestination: true,
-    });
+    } as Vertex);
   }
 
   if (v.direction === "right") {
