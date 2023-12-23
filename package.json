@@ -4,11 +4,16 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "day1": "bun day1/day1.ts"
+    "day1": "bun day1/day1.ts",
+    "day17": "bun day17/part1.ts"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@types/node": "^20.10.5"
+    "@types/node": "^20.10.5",
+    "priorityqueuejs": "^2.0.0"
+  },
+  "devDependencies": {
+    "@types/priorityqueuejs": "^1.0.4"
   }
 }

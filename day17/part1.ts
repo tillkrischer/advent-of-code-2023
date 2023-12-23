@@ -1,4 +1,5 @@
 import * as fs from "fs/promises";
+import PriorityQueue = require("priorityqueuejs");
 
 type Vertex = {
   y: number;
@@ -15,32 +16,29 @@ const getKey = (v: Vertex) => {
   return `${v.y},${v.x},${v.straight},${v.direction}`;
 };
 
-class VertexSet {
-  private map: Map<string, Vertex>;
+type VertexWithPriority = {
+  vertex: Vertex;
+  priority: number;
+};
+
+class VertextPriorityQueue {
+  private queue: PriorityQueue<VertexWithPriority>;
 
   constructor() {
-    this.map = new Map();
-    this[Symbol.iterator] = this.values();
+    this.queue = new PriorityQueue((a, b) => b.priority - a.priority)
   }
 
-  values() {
-    return this.map.values();
+  addWithPriority(v: Vertex, prio: number): void {
+    this.queue.enq({vertex: v, priority: prio});
   }
 
-  add(v: Vertex) {
-    this.map.set(getKey(v), v);
+  extractMin(): Vertex {
+    const elem = this.queue.deq()
+    return elem.vertex;
   }
 
-  delete(v: Vertex) {
-    this.map.delete(getKey(v));
-  }
-
-  size() {
-    return this.map.size;
-  }
-
-  has(v: Vertex) {
-    return this.map.has(getKey(v));
+  size(): number {
+    return this.queue.size();
   }
 }
 
@@ -55,8 +53,12 @@ class VertexMap<T> {
     return this.map.set(getKey(k), v);
   }
 
-  get(k: Vertex) {
+  get(k: Vertex): T | undefined {
     return this.map.get(getKey(k));
+  }
+
+  getDestination()  {
+    return this.map.get("destination");
   }
 }
 
@@ -69,14 +71,14 @@ const getNeighbours = (grid: number[][], v: Vertex): Vertex[] => {
     return [];
   }
 
-  if (v.x === width - 1 && v.y  === height -1) {
+  if (v.x === width - 1 && v.y === height - 1) {
     neighbours.push({
       x: -1,
       y: -1,
       straight: -1,
-      direction: 'up',
+      direction: "up",
       isDestination: true,
-    })
+    });
   }
 
   if (v.direction === "right") {
@@ -194,24 +196,6 @@ const getEdge = (grid: number[][], u: Vertex, v: Vertex): number => {
   return grid[v.y][v.x];
 };
 
-const getMinDist = (Q: VertexSet, dist: VertexMap<number>) => {
-  let minDist = Number.MAX_VALUE;
-  let minVertex: Vertex | undefined = undefined;
-  for (const v of Q.values()) {
-    const d = dist.get(v);
-    if (d < minDist) {
-      minDist = d;
-      minVertex = v;
-    }
-  }
-  Q.delete(minVertex);
-  return minVertex;
-};
-
-const hasUnvisitedConnected = (Q: VertexSet, dist: VertexMap<number>) => {
-  return ![...Q.values()].map(v => dist.get(v)).every(dist => dist === Number.MAX_VALUE)
-}
-
 const run = async () => {
   // const content = await fs.readFile("day17/test-input.txt", {
   //   encoding: "utf8",
@@ -219,57 +203,33 @@ const run = async () => {
   const content = await fs.readFile("day17/input.txt", { encoding: "utf8" });
   const lines = content.split("\n");
   const grid = lines.map((l) => l.split("").map((c) => Number.parseInt(c)));
-  // console.log(grid);
+
 
   const dist = new VertexMap<number>();
-  const Q = new VertexSet();
+  const Q = new VertextPriorityQueue();
 
-  for (let i = 0; i < grid.length; i++) {
-    for (let j = 0; j < grid[0].length; j++) {
-      for (const direction of ["up", "down", "left", "right"] as const) {
-        for (let straight = 1; straight <= 3; straight++) {
-          const v: Vertex = {
-            y: i,
-            x: j,
-            straight: straight,
-            direction: direction,
-          };
-          dist.set(v, Number.MAX_VALUE);
-          Q.add(v);
-        }
-      }
-    }
-  }
   const start: Vertex = {
     y: 0,
     x: 0,
     straight: 0,
     direction: "right",
   };
-  const destination: Vertex = {
-    y: 0,
-    x: 0,
-    straight: 0,
-    direction: "right",
-    isDestination: true,
-  };
+  Q.addWithPriority(start, 0);
   dist.set(start, 0);
-  Q.add(start);
-  dist.set(destination, Number.MAX_VALUE);
-  Q.add(destination);
 
-  while (hasUnvisitedConnected(Q, dist)) {
-    const u = getMinDist(Q, dist);
-    const nbhs = getNeighbours(grid, u).filter((n) => Q.has(n));
+  while(Q.size() > 0) {
+    const u = Q.extractMin();
+    const nbhs = getNeighbours(grid, u);
     for (const v of nbhs) {
       const alt = dist.get(u) + getEdge(grid, u, v);
-      if (alt < dist.get(v)) {
+      if (alt < (dist.get(v) ?? Number.MAX_VALUE)) {
         dist.set(v, alt);
+        Q.addWithPriority(v, alt);
       }
     }
   }
 
-  const shortest = dist.get(destination);
+  const shortest = dist.getDestination()
   console.log(shortest);
 };
 
