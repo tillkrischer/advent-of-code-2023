@@ -1,5 +1,5 @@
 import * as fs from "fs/promises";
-import PriorityQueue = require("priorityqueuejs");
+import { MinHeap } from "./heap";
 
 type Vertex = {
   y: number;
@@ -16,32 +16,6 @@ const getKey = (v: Vertex) => {
   return `${v.y},${v.x},${v.straight},${v.direction}`;
 };
 
-type VertexWithPriority = {
-  vertex: Vertex;
-  priority: number;
-};
-
-class VertextPriorityQueue {
-  private queue: PriorityQueue<VertexWithPriority>;
-
-  constructor() {
-    this.queue = new PriorityQueue((a, b) => b.priority - a.priority)
-  }
-
-  addWithPriority(v: Vertex, prio: number): void {
-    this.queue.enq({vertex: v, priority: prio});
-  }
-
-  extractMin(): Vertex {
-    const elem = this.queue.deq()
-    return elem.vertex;
-  }
-
-  size(): number {
-    return this.queue.size();
-  }
-}
-
 class VertexMap<T> {
   private map: Map<string, T>;
 
@@ -57,7 +31,7 @@ class VertexMap<T> {
     return this.map.get(getKey(k));
   }
 
-  getDestination()  {
+  getDestination() {
     return this.map.get("destination");
   }
 }
@@ -204,9 +178,8 @@ const run = async () => {
   const lines = content.split("\n");
   const grid = lines.map((l) => l.split("").map((c) => Number.parseInt(c)));
 
-
   const dist = new VertexMap<number>();
-  const Q = new VertextPriorityQueue();
+  const Q = new MinHeap<Vertex>();
 
   const start: Vertex = {
     y: 0,
@@ -214,22 +187,22 @@ const run = async () => {
     straight: 0,
     direction: "right",
   };
-  Q.addWithPriority(start, 0);
+  Q.enq(start, 0);
   dist.set(start, 0);
 
-  while(Q.size() > 0) {
-    const u = Q.extractMin();
+  while (Q.size() > 0) {
+    const u = Q.deq();
     const nbhs = getNeighbours(grid, u);
     for (const v of nbhs) {
       const alt = dist.get(u) + getEdge(grid, u, v);
       if (alt < (dist.get(v) ?? Number.MAX_VALUE)) {
         dist.set(v, alt);
-        Q.addWithPriority(v, alt);
+        Q.enq(v, alt);
       }
     }
   }
 
-  const shortest = dist.getDestination()
+  const shortest = dist.getDestination();
   console.log(shortest);
 };
 
