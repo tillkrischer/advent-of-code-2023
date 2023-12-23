@@ -7,6 +7,7 @@ type Vertex = {
   straight: number;
   direction: "up" | "down" | "left" | "right";
   isDestination?: boolean;
+  isStart?: boolean;
 };
 
 const getKey = (v: Vertex) => {
@@ -46,6 +47,23 @@ const getNeighbours = (grid: number[][], v: Vertex): Vertex[] => {
 
   if (v.isDestination) {
     return [];
+  }
+
+  if (v.isStart) {
+    return [
+      {
+        y: 0,
+        x: 0,
+        straight: 0,
+        direction: "right",
+      },
+      {
+        y: 0,
+        x: 0,
+        straight: 0,
+        direction: "down",
+      },
+    ];
   }
 
   if (v.x === width - 1 && v.y === height - 1 && v.straight >= MIN_STRAIGHT) {
@@ -167,6 +185,9 @@ const getNeighbours = (grid: number[][], v: Vertex): Vertex[] => {
 };
 
 const getEdge = (grid: number[][], u: Vertex, v: Vertex): number => {
+  if (u.isStart) {
+    return 0;
+  }
   if (v.isDestination) {
     return 0;
   }
@@ -188,11 +209,8 @@ const run = async () => {
   const Q = new MinHeap<Vertex>();
 
   const start: Vertex = {
-    y: 0,
-    x: 0,
-    straight: 0,
-    direction: "right",
-  };
+    isStart: true,
+  } as Vertex;
   Q.enq(start, 0);
   dist.set(start, 0);
 
