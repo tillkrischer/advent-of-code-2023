@@ -151,10 +151,19 @@ const getPressesUntil = (
   console.log(targetPulseOrigin, targetPulseType);
   const module = modules.get(targetPulseOrigin);
   if (module.type === "conjunction") {
-    if (targetPulseType === "low") {
-      return getOrigins(modules, module.name)
+    const origins = getOrigins(modules, module.name);
+    if (
+      targetPulseType === "low" &&
+      origins.every((o) => o.type === "conjunction")
+    ) {
+      return origins
         .map((o) => getPressesUntil(modules, "high", o.name))
         .reduce((a, b) => lcm(a, b), 1);
+    }
+    if (targetPulseType === "high") {
+      if (origins.length === 1) {
+        return getPressesUntil(modules, "low", origins[0].name);
+      }
     }
   }
 
@@ -202,20 +211,6 @@ const run = async () => {
   }
 
   console.log(minPresses);
-
-  // let result = getPressesUntil(modules, "high", "dh");
-  // console.log(result);
-  // result = getPressesUntil(modules, "high", "qd");
-  // console.log(result);
-  // result = getPressesUntil(modules, "high", "bb");
-  // console.log(result);
-  // result = getPressesUntil(modules, "high", "dp");
-  // console.log(result);
-  // let result = getPressesUntil(modules, "low", "dt");
-  // console.log(result);
 };
 
 run();
-
-// const l = [3877, 4001, 3907, 4027].reduce((a, b) => lcm(a,b), 1)
-// console.log(l)
