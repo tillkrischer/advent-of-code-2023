@@ -7,7 +7,7 @@ const gcd = (a: number, b: number) => {
     return gcd(larger - smaller, smaller)
 }
 
-const lcm = (a: number, b: number) => {
+export const lcm = (a: number, b: number) => {
     const num = Math.abs(a * b);
     const denom = gcd(a, b);
     return num / denom;
